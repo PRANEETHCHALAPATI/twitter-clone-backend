@@ -15,9 +15,10 @@ const initDBAndServer = async () => {
       filename: dbPath,
       driver: sqlite3.Database,
     })
-    app.listen(3000, () => {
-      console.log('Server is running at 3000')
-    })
+const port = process.env.PORT || 3000
+app.listen(port, () => {
+  console.log(`Server is running at ${port}`)
+})
   } catch (e) {
     console.log(`DB Error ${e}`)
     process.exit(1)
