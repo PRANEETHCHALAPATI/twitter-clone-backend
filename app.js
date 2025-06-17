@@ -9,6 +9,99 @@ const path = require('path')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 
+const insertDummyData = async () => {
+  // Clear old data
+  await db.run(`DELETE FROM reply`);
+  await db.run(`DELETE FROM like`);
+  await db.run(`DELETE FROM follower`);
+  await db.run(`DELETE FROM tweet`);
+  await db.run(`DELETE FROM user`);
+
+  // Hash passwords
+  const users = [
+    { name: "John Doe", username: "john", password: "john123", gender: "male" },
+    { name: "Jane Smith", username: "jane", password: "jane123", gender: "female" },
+    { name: "Mark Lee", username: "mark", password: "mark123", gender: "male" },
+    { name: "Alice Ray", username: "alice", password: "alice123", gender: "female" },
+    { name: "Bob Stone", username: "bob", password: "bob123", gender: "male" },
+    { name: "Cathy Liu", username: "cathy", password: "cathy123", gender: "female" },
+  ];
+
+  for (const u of users) {
+    const hashedPwd = await bcrypt.hash(u.password, 10);
+    await db.run(
+      `INSERT INTO user (name, username, password, gender) VALUES (?, ?, ?, ?)`,
+      [u.name, u.username, hashedPwd, u.gender]
+    );
+  }
+
+  // Tweets
+  const tweets = [
+    [1, "Hey there! John's here."],
+    [2, "Jane's first tweet!"],
+    [3, "Mark checking in."],
+    [4, "Alice says hello!"],
+    [5, "Bob’s thoughts today."],
+    [6, "Cathy is tweeting for the first time."],
+    [1, "Loving this Twitter Clone!"],
+    [2, "Beautiful day to code."],
+    [3, "Learning backend stuff."],
+    [4, "Frontend magic with CSS!"],
+    [5, "Deploying my first app!"],
+    [6, "Happy to connect here!"]
+  ];
+
+  for (const [uid, text] of tweets) {
+    const dateTime = new Date(Date.now() - Math.floor(Math.random() * 100000000)).toISOString().replace('T', ' ').split('.')[0];
+    await db.run(`INSERT INTO tweet (tweet, user_id, date_time) VALUES (?, ?, ?)`, [text, uid, dateTime]);
+  }
+
+  // Followers
+  const followers = [
+    [1, 2], [1, 3], [1, 4],
+    [2, 1], [2, 3], [2, 5],
+    [3, 1], [3, 2], [3, 6],
+    [4, 5], [4, 6],
+    [5, 1], [6, 2]
+  ];
+  for (const [follower, following] of followers) {
+    await db.run(`INSERT INTO follower (follower_user_id, following_user_id) VALUES (?, ?)`, [follower, following]);
+  }
+
+  // Likes
+  const likes = [
+    [1, 2], [1, 3], [1, 4],
+    [2, 1], [2, 5], [2, 6],
+    [3, 1], [3, 2], [3, 9],
+    [4, 3], [4, 7], [4, 8],
+    [5, 6], [5, 10], [6, 1], [6, 11]
+  ];
+  for (const [uid, tweetId] of likes) {
+    await db.run(`INSERT INTO like (user_id, tweet_id) VALUES (?, ?)`, [uid, tweetId]);
+  }
+
+  // Replies
+  const replies = [
+    [2, 1, "Welcome Jane!"],
+    [3, 1, "Cool John!"],
+    [4, 2, "Hello Jane!"],
+    [5, 2, "Nice to see you!"],
+    [6, 3, "Hey Mark!"],
+    [1, 4, "Hi Alice!"],
+    [2, 5, "Great point Bob!"],
+    [3, 6, "Nice tweet Cathy!"],
+    [4, 7, "Indeed, good app."],
+    [5, 8, "Yes, sunny here too!"],
+    [6, 9, "Same here!"],
+    [1, 10, "Wow, stylish!"]
+  ];
+  for (const [uid, tid, comment] of replies) {
+    await db.run(`INSERT INTO reply (tweet_id, user_id, reply) VALUES (?, ?, ?)`, [tid, uid, comment]);
+  }
+
+  console.log("✅ More dummy data inserted successfully.");
+};
+
 let db = null
 const dbPath = path.join(__dirname, 'db','twitterClone.db')
 const initDBAndServer = async () => {
