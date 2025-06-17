@@ -110,7 +110,7 @@ const initDBAndServer = async () => {
       filename: dbPath,
       driver: sqlite3.Database,
     })
-await insertDummyData();
+// await insertDummyData();
 const port = process.env.PORT || 3000
 app.listen(port, () => {
   console.log(`Server is running at ${port}`)
